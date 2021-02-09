@@ -2,9 +2,15 @@ import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 
 export const DetailScreen = ({ navigation }) => {
-  const character = navigation.getParam("character");
-
-  const { name, image, gender, origin, species, location, episode } = character;
+  const {
+    image,
+    name,
+    gender,
+    species,
+    origin,
+    location,
+    episode,
+  } = navigation.getParam("character");
 
   return (
     <View style={styles.container}>
@@ -12,9 +18,9 @@ export const DetailScreen = ({ navigation }) => {
       <Text style={styles.text}>{name}</Text>
       <Text style={styles.text}>{gender}</Text>
       <Text style={styles.text}>{species}</Text>
-      <Text style={styles.text}>Origin - {origin.name}</Text>
-      <Text style={styles.text}>Last Seen: {location.name}</Text>
-      <Text style={styles.text}>Appeared in {episode.length} episode(s)</Text>
+      <Text style={styles.text}>Origin - {origin?.name}</Text>
+      <Text style={styles.text}>Last Seen: {location?.name}</Text>
+      <Text style={styles.text}>Appeared in {episode?.length} episode(s)</Text>
     </View>
   );
 };

@@ -3,23 +3,43 @@ import _axios from "../api/_axios";
 
 const initialState = {
   loading: false,
-  data: {},
+  data: [],
+  filteredData: [],
   error: "",
+  pages: 0,
+  page: 1,
+  loadMore: false,
 };
 
 const reducer = (state, action) => {
   const { type, payload } = action;
 
   switch (type) {
-    case "GET_REQUEST":
+    case "GET_ALL_REQUEST":
     case "SEARCH_REQUEST":
       return { ...state, loading: true, error: "" };
-    case "GET_SUCCESS":
+    case "GET_ALL_SUCCESS":
+      return {
+        ...state,
+        loading: false,
+        data: [...state.data, ...payload.results],
+        filteredData: [],
+        pages: payload?.info?.pages,
+        error: "",
+      };
     case "SEARCH_SUCCESS":
-      return { ...state, loading: false, data: payload, error: "" };
-    case "GET_FAILURE":
+      return {
+        ...state,
+        loading: false,
+        filteredData: payload,
+        data: [],
+        error: "",
+      };
+    case "GET_ALL_FAILURE":
     case "SEARCH_FAILURE":
       return { ...state, loading: false, error: payload };
+    case "LOAD_MORE":
+      return { ...state, loadMore: true, page: state.page + 1 };
     default:
       return state;
   }
@@ -28,17 +48,17 @@ const reducer = (state, action) => {
 export default useResult = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  useEffect(() => getCharacters(), []);
+  useEffect(() => getAllCharacters(state.page), [state.page]);
 
-  const getCharacters = () => {
-    dispatch({ type: "GET_REQUEST" });
+  const getAllCharacters = (page = 1) => {
+    dispatch({ type: "GET_ALL_REQUEST" });
     _axios
-      .get("/character")
+      .get(`/character/?page=${page}`)
       .then((response) => {
-        dispatch({ type: "GET_SUCCESS", payload: response.data.results });
+        dispatch({ type: "GET_ALL_SUCCESS", payload: response.data });
       })
       .catch((err) => {
-        dispatch({ type: "GET_FAILURE", payload: err });
+        dispatch({ type: "GET_ALL_FAILURE", payload: err });
       });
   };
 
@@ -54,5 +74,10 @@ export default useResult = () => {
       });
   };
 
-  return [state, getCharacters, searchCharacters];
+  const loadMore = () => {
+    if (state.pages > 1 && state.pages !== state.page && !state.loading)
+      dispatch({ type: "LOAD_MORE" });
+  };
+
+  return [state, getAllCharacters, searchCharacters, loadMore];
 };
