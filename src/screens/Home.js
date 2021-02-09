@@ -1,29 +1,52 @@
-import React from "react";
-import { View, Text, FlatList, StyleSheet, Button } from "react-native";
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  ToastAndroid,
+  StyleSheet,
+  Button,
+} from "react-native";
 import { Character, SearchBar } from "../components";
 import useResult from "../hooks/useResult";
 
 export const Home = () => {
-  const [state, getCharacters, searchCharacters] = useResult();
+  const [state, getAllCharacters, searchCharacters, loadMore] = useResult();
 
-  const { loading, data, error } = state;
+  const { loading, data, filteredData, error } = state;
+
+  const showToastWithGravity = () => {
+    ToastAndroid.showWithGravity(
+      "Loading",
+      ToastAndroid.LONG,
+      ToastAndroid.CENTER,
+      ToastAndroid.BOTTOM
+    );
+  };
+
+  if (loading) {
+    showToastWithGravity();
+  }
+
+  const _renderItem = ({ item }) => <Character character={item} />;
 
   return (
     <View style={styles.container}>
       <SearchBar onChangeText={(text) => searchCharacters(text)} />
-      {loading ? (
-        <Text style={styles.loadingText}>Loading...</Text>
-      ) : error ? (
+      {error ? (
         <View>
           <Text style={styles.error}>{error}</Text>
-          <Button title="Refresh" onPress={getCharacters} />
+          <Button title="Refresh" onPress={getAllCharacters} />
         </View>
       ) : (
         <FlatList
-          data={data}
-          keyExtractor={(item) => String(item.id)}
+          data={filteredData.length > 0 ? filteredData : data}
+          keyExtractor={(item) => String(item.id * Math.random())}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <Character character={item} />}
+          renderItem={_renderItem}
+          onEndReachedThreshold={0.9}
+          onEndReached={!filteredData.length > 0 ? loadMore : null}
+          removeClippedSubviews={true}
         />
       )}
     </View>
